@@ -61,6 +61,12 @@ async def no_handler(callback: CallbackQuery, state: FSMContext):
     if isinstance(callback.message, Message):
         await create_ticket(callback.message, data["title"])
 
+@dp.callback_query(F.data == "return_back")
+async def return_back_handler(callback: CallbackQuery):
+    if isinstance(callback.message, Message):
+        await callback.message.edit_text(text="Вы запустили бот!", reply_markup=keyboard)
+
+
 @dp.message(Command("help"))
 async def help_handler(message: Message):
     await message.answer("Чем вам помочь?")
