@@ -1,4 +1,10 @@
+from math import ceil
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from asgiref.sync import sync_to_async
+
+from tickets.models import Ticket
+
 
 keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Create", callback_data="create"),
                                                   InlineKeyboardButton(text="Delete", callback_data="delete")],
@@ -16,3 +22,34 @@ category_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
 
 boolean_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Yes", callback_data="pressed_yes"),
                                                           InlineKeyboardButton(text="No", callback_data="pressed_no")]])
+
+
+@sync_to_async
+def get_tickets(start, end):
+    return list(Ticket.objects.filter(id__range=(start, end)))
+
+
+@sync_to_async
+def get_tickets_all():
+    return list(Ticket.objects.all())
+
+
+BACK = InlineKeyboardButton(text="<-", callback_data="Назад")
+NEXT = InlineKeyboardButton(text="->", callback_data="Вперед")
+
+
+async def get_keyboard(page):
+    all_ticket = len(await get_tickets_all())
+    all_page = ceil(all_ticket / 3)
+    page %= all_page
+
+    start = (page * 3) + 1
+    end = start + 2
+
+    tickets = await get_tickets(start, end)
+    ticket_buttons = [
+        InlineKeyboardButton(text=str(button), callback_data="empty")
+        for button in tickets
+    ]
+    my_keyboard = InlineKeyboardMarkup(inline_keyboard=[[BACK, *ticket_buttons, NEXT]])
+    return my_keyboard

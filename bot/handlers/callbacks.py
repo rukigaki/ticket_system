@@ -1,9 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 from .handlers import TicketState
-from bot.keyboards import keyboard, category_keyboard, boolean_keyboard
+from bot.keyboards import keyboard, category_keyboard, boolean_keyboard, get_keyboard
 from bot.utils import create_ticket
 
 
@@ -39,6 +40,29 @@ async def no_handler(callback: CallbackQuery, state: FSMContext):
 async def tv_broke_handler(callback: CallbackQuery):
     await create_ticket(callback.data)
 
+class PaginationState(StatesGroup):
+    pagination_mode = State()
+
+@router.callback_query(F.data == "get")
+async def get_ticket_handler(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(PaginationState.pagination_mode)
+    await state.update_data(page=0)
+    await callback.message.edit_text(text="Выберите тикет:", reply_markup=await get_keyboard(0))
+
+@router.callback_query(PaginationState.pagination_mode, F.data == "Вперед")
+async def forward_handler(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    page = data["page"] + 1
+    await callback.message.edit_reply_markup(reply_markup=await get_keyboard(page))
+    await state.update_data(page=page)
+
+
+@router.callback_query(PaginationState.pagination_mode, F.data == "Назад")
+async def back_handler(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    page = data["page"] - 1
+    await callback.message.edit_reply_markup(reply_markup=await get_keyboard(page))
+    await state.update_data(page=page)
 
 @router.callback_query(F.data == "return_back")
 async def return_back_handler(callback: CallbackQuery):
