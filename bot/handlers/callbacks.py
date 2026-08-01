@@ -7,21 +7,24 @@ from .handlers import TicketState
 from bot.keyboards import keyboard, category_keyboard, boolean_keyboard, get_keyboard
 from bot.utils import create_ticket
 
-
-
 router = Router()
+
 
 @router.callback_query(F.data == "create")
 async def create_ticket_handler(callback: CallbackQuery):
     if isinstance(callback.message, Message):
-        await callback.message.edit_text(text="Выберите что хотите создать", reply_markup=category_keyboard)
+        await callback.message.edit_text(
+            text="Выберите что хотите создать", reply_markup=category_keyboard
+        )
 
 
 @router.callback_query(F.data == "create_ticket_toilet_broke")
 async def toilet_broke_handler(callback: CallbackQuery, state: FSMContext):
     await state.update_data(title=callback.data)
     await state.set_state(TicketState.waiting_description)
-    await callback.message.answer("Хотите добавить описание", reply_markup=boolean_keyboard)
+    await callback.message.answer(
+        "Хотите добавить описание", reply_markup=boolean_keyboard
+    )
 
 
 @router.callback_query(F.data == "pressed_yes")
@@ -36,18 +39,28 @@ async def no_handler(callback: CallbackQuery, state: FSMContext):
     if isinstance(callback.message, Message):
         await create_ticket(callback.message, data["title"])
 
+
 @router.callback_query(F.data == "create_ticket_tv_broke")
-async def tv_broke_handler(callback: CallbackQuery):
-    await create_ticket(callback.data)
+async def tv_broke_handler(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(title=callback.data)
+    await state.set_state(TicketState.waiting_description)
+    await callback.message.answer(
+        "Хотите добавить описание", reply_markup=boolean_keyboard
+    )
+
 
 class PaginationState(StatesGroup):
     pagination_mode = State()
+
 
 @router.callback_query(F.data == "get")
 async def get_ticket_handler(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PaginationState.pagination_mode)
     await state.update_data(page=0)
-    await callback.message.edit_text(text="Выберите тикет:", reply_markup=await get_keyboard(0))
+    await callback.message.edit_text(
+        text="Выберите тикет:", reply_markup=await get_keyboard(0)
+    )
+
 
 @router.callback_query(PaginationState.pagination_mode, F.data == "Вперед")
 async def forward_handler(callback: CallbackQuery, state: FSMContext):
@@ -64,10 +77,13 @@ async def back_handler(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_reply_markup(reply_markup=await get_keyboard(page))
     await state.update_data(page=page)
 
+
 @router.callback_query(F.data == "return_back")
 async def return_back_handler(callback: CallbackQuery):
     if isinstance(callback.message, Message):
-        await callback.message.edit_text(text="Вы запустили бот!", reply_markup=keyboard)
+        await callback.message.edit_text(
+            text="Вы запустили бот!", reply_markup=keyboard
+        )
 
 
 @router.callback_query(F.data == "delete")

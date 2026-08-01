@@ -2,6 +2,12 @@ import asyncio
 import logging
 import os
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+
+import django
+
+django.setup()
+
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
@@ -9,9 +15,6 @@ from handlers import router as main_router
 
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN", default="")
-
-
-
 
 
 async def main():

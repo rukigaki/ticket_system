@@ -12,7 +12,9 @@ class TicketState(StatesGroup):
     waiting_description = State()
     waiting_title = State()
 
+
 router = Router()
+
 
 @router.message(CommandStart())
 async def start_handler(message: Message):
