@@ -47,6 +47,15 @@ boolean_keyboard = InlineKeyboardMarkup(
 )
 
 
+attr_model_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Title", callback_data="title"),
+            InlineKeyboardButton(text="Description", callback_data="description"),
+        ]
+    ]
+)
+
 @sync_to_async
 def get_tickets(start, end):
     return list(Ticket.objects.filter(id__range=(start, end)))
@@ -71,7 +80,7 @@ async def get_keyboard(page):
 
     tickets = await get_tickets(start, end)
     ticket_buttons = [
-        InlineKeyboardButton(text=str(button), callback_data="empty")
+        InlineKeyboardButton(text=str(button), callback_data=f"ticket_{button.id}")
         for button in tickets
     ]
     my_keyboard = InlineKeyboardMarkup(inline_keyboard=[[BACK, *ticket_buttons, NEXT]])

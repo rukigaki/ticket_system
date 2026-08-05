@@ -11,6 +11,7 @@ from bot.keyboards import (
     get_keyboard,
 )
 from bot.api_funcs import create_ticket, patch_ticket
+from .services import DataActionResolver
 
 router = Router()
 
@@ -100,6 +101,19 @@ async def delete_ticket_handler(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         f"Вы действительно хотите удалить тикет?", reply_markup=await get_keyboard(0)
     )
+
+
+@router.callback_query(F.data.startswith("ticket_"))
+async def ticket_handler(callback: CallbackQuery, state: FSMContext):
+    ticket_id = int(callback.data.split("_")[1])
+    await state.update_data(ticket_id=ticket_id)
+
+    data = await state.get_data()
+    method = data["method"]
+    method_name = f"{method}_util_ticket"
+
+    execute_func = getattr(DataActionResolver, method_name)
+    await execute_func(callback.message, state=state, ticket_id=ticket_id)
 
 
 
