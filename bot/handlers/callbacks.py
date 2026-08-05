@@ -4,14 +4,20 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from .handlers import TicketState
-from bot.keyboards import keyboard, category_keyboard, boolean_keyboard, get_keyboard
-from bot.utils import create_ticket
+from bot.keyboards import (
+    keyboard,
+    category_keyboard,
+    boolean_keyboard,
+    get_keyboard,
+)
+from bot.api_funcs import create_ticket, patch_ticket
 
 router = Router()
 
 
 @router.callback_query(F.data == "create")
-async def create_ticket_handler(callback: CallbackQuery):
+async def create_ticket_handler(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(method=callback.data)
     if isinstance(callback.message, Message):
         await callback.message.edit_text(
             text="Выберите что хотите создать", reply_markup=category_keyboard
@@ -87,5 +93,32 @@ async def return_back_handler(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "delete")
-async def delete_ticket(callback: CallbackQuery):
-    await callback.message.answer("Тикет удален")
+async def delete_ticket_handler(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(PaginationState.pagination_mode)
+    await state.update_data(page=0)
+    await state.update_data(method=callback.data)
+    await callback.message.edit_text(
+        f"Вы действительно хотите удалить тикет?", reply_markup=await get_keyboard(0)
+    )
+
+
+
+
+@router.callback_query(F.data == "patch")
+async def patch_ticket_handler(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(PaginationState.pagination_mode)
+    await state.update_data(page=0)
+    await state.update_data(method=callback.data)
+    await callback.message.edit_text(
+        "Выберите тикет для частичного обновления:", reply_markup=await get_keyboard(0)
+    )
+
+
+@router.callback_query(F.data == "put")
+async def put_ticket_handler(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(PaginationState.pagination_mode)
+    await state.update_data(page=0)
+    await state.update_data(method=callback.data)
+    await callback.message.edit_text(
+        "Выберите тикет для обновления:", reply_markup=await get_keyboard(0)
+    )
