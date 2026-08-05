@@ -116,6 +116,16 @@ async def ticket_handler(callback: CallbackQuery, state: FSMContext):
     await execute_func(callback.message, state=state, ticket_id=ticket_id)
 
 
+@router.callback_query(F.data == "title")
+async def get_title_handler(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Введите title:")
+    await state.set_state(TicketState.waiting_title)
+
+
+@router.callback_query(F.data == "description")
+async def get_desc_handler(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Введите description:")
+    await state.set_state(TicketState.waiting_description)
 
 
 @router.callback_query(F.data == "patch")
@@ -136,3 +146,9 @@ async def put_ticket_handler(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         "Выберите тикет для обновления:", reply_markup=await get_keyboard(0)
     )
+
+
+@router.callback_query(F.data == "completed")
+async def completed_handler(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await patch_ticket(callback.message, data["ticket_id"])

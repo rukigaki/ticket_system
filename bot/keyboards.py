@@ -56,6 +56,17 @@ attr_model_keyboard = InlineKeyboardMarkup(
     ]
 )
 
+attr_model_keyboard_new = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Title", callback_data="title"),
+            InlineKeyboardButton(text="Description", callback_data="description"),
+            InlineKeyboardButton(text="Завершить", callback_data="completed")
+        ]
+    ]
+)
+
+
 @sync_to_async
 def get_tickets(start, end):
     return list(Ticket.objects.filter(id__range=(start, end)))
